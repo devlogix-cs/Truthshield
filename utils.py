@@ -73,24 +73,25 @@ def setup_database():
 API_KEYS = []
 API_KEY_CYCLE = None
 
-def load_api_keys(file_path='API.txt'):
-    """Load API keys from a text file."""
+def load_api_keys():
+    """Load API key from environment variable"""
     global API_KEYS, API_KEY_CYCLE
+
     try:
-        if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
-                API_KEYS = [line.strip() for line in f if line.strip()]
-            if not API_KEYS:
-                print("⚠️ No valid API keys found in api.txt. Falling back to rule-based analysis.")
-                return False
-            API_KEY_CYCLE = cycle(API_KEYS)  # Create an iterator to cycle through keys
-            print(f"✅ Loaded {len(API_KEYS)} API keys from {file_path}")
+        env_key = os.getenv("GROQ_API_KEY")
+
+        if env_key:
+            API_KEYS = [env_key]
+            API_KEY_CYCLE = cycle(API_KEYS)
+
+            print("✅ Loaded Groq API key from environment variable")
             return True
-        else:
-            print("⚠️ api.txt file not found. Falling back to rule-based analysis.")
-            return False
+
+        print("⚠️ GROQ_API_KEY not found.")
+        return False
+
     except Exception as e:
-        print(f"❌ Error loading API keys: {str(e)}. Falling back to rule-based analysis.")
+        print(f"❌ Error loading API key: {str(e)}")
         return False
 
 def get_next_api_key():

@@ -8,6 +8,8 @@ import os
 from utils import (setup_database, train_models, load_models, process_news, 
                   test_groq_connection, is_url, fetch_url_content, 
                   extract_text_from_image, allowed_file)
+import os
+
 
 # --- Flask App Configuration ---
 app = Flask(__name__, static_folder='static')
@@ -250,8 +252,11 @@ def main():
             root.mainloop()
 
 if __name__ == "__main__":
-    groq_available = test_groq_connection()
-    if not groq_available:
-        print("\n⚠️ Groq API is not available or all keys are invalid.")
-        print("The system will use rule-based analysis for AI features.")
+    try:
+        groq_available = test_groq_connection()
+        if not groq_available:
+            print("\n⚠️ Groq API is not available.")
+    except Exception as e:
+        print(f"\n⚠️ Groq check skipped: {e}")
+
     main()

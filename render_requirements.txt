@@ -1,0 +1,10 @@
+flask
+mysql-connector-python
+beautifulsoup4
+opencv-python-headless
+numpy
+pandas
+scikit-learn
+requests
+groq
+gunicorn
