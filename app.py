@@ -32,6 +32,8 @@ def analyze():
             def __init__(self):
                 self.model_output = []
                 self.ai_output = []
+            def insert(self, _, text):
+                self.model_output.append(text)
             def insert_model(self, _, text):
                 self.model_output.append(text)
             def insert_ai(self, _, text):
@@ -126,7 +128,7 @@ class FakeNewsDetectorGUI:
         self.output_text.insert(tk.END, "============================\n")
         self.output_text.insert(tk.END, "Enter news text, a URL, or select an image to analyze.\n")
         self.output_text.see(tk.END)
-
+    
     def browse_image(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png")])
         if file_path:

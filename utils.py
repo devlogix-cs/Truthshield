@@ -600,31 +600,61 @@ def check_ai_agreement(ai_response, sgd_prediction, pa_prediction):
         return False, ai_verdict
 
 def process_news(news_text, sgd_model, pa_model, vectorizer, output_widget, include_ai=False):
-    output_widget.insert_model(None, f"📰 Analyzing: {news_text}\n")
-    
+    output_widget.insert("end", f"📰 Analyzing: {news_text}\n")
+
     start_time = time.time()
+
     sgd_pred, sgd_conf, pa_pred, pa_conf = get_model_predictions(
         sgd_model, pa_model, vectorizer, news_text
     )
+
     prediction_time = time.time() - start_time
-    
-    output_widget.insert_model(None, f"🔄 SGD Classifier: {sgd_pred} (Confidence: {sgd_conf*100:.2f}%)\n")
-    output_widget.insert_model(None, f"🚀 Passive Aggressive: {pa_pred} (Confidence: {pa_conf*100:.2f}%)\n")
-    output_widget.insert_model(None, f"⏱️ Prediction completed in {prediction_time:.4f} seconds\n")
-    
+
+    output_widget.insert(
+        "end",
+        f"🔄 SGD Classifier: {sgd_pred} (Confidence: {sgd_conf*100:.2f}%)\n"
+    )
+
+    output_widget.insert(
+        "end",
+        f"🚀 Passive Aggressive: {pa_pred} (Confidence: {pa_conf*100:.2f}%)\n"
+    )
+
+    output_widget.insert(
+        "end",
+        f"⏱️ Prediction completed in {prediction_time:.4f} seconds\n"
+    )
+
     if include_ai:
-        output_widget.insert_ai(None, "🧠 Cross-checking with AI...\n")
+        output_widget.insert("end", "🧠 Cross-checking with AI...\n")
+
         ai_check = analyze_with_ai(news_text)
-        output_widget.insert_ai(None, f"🔄 AI Analysis:\n{ai_check}\n")
-        
-        agreement, ai_verdict = check_ai_agreement(ai_check, sgd_pred, pa_pred)
+
+        output_widget.insert(
+            "end",
+            f"🔄 AI Analysis:\n{ai_check}\n"
+        )
+
+        agreement, ai_verdict = check_ai_agreement(
+            ai_check,
+            sgd_pred,
+            pa_pred
+        )
+
         if agreement:
-            output_widget.insert_ai(None, f"✅ AI ({ai_verdict}) agrees with model prediction.\n")
+            output_widget.insert(
+                "end",
+                f"✅ AI ({ai_verdict}) agrees with model prediction.\n"
+            )
         else:
-            output_widget.insert_ai(None, f"❌ AI ({ai_verdict}) disagrees with model predictions.\n")
+            output_widget.insert(
+                "end",
+                f"❌ AI ({ai_verdict}) disagrees with model predictions.\n"
+            )
+
+    output_widget.see("end")
 
     return sgd_model, pa_model, vectorizer
-
 def test_groq_connection():
     print("\n🔍 Testing Groq API connection...")
     if not API_KEYS:
