@@ -11,11 +11,18 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 import requests
 from bs4 import BeautifulSoup
-import easyocr
-import cv2
 from functools import lru_cache
 import joblib
 from itertools import cycle
+try:
+    import easyocr
+    import cv2
+    OCR_AVAILABLE = True
+except Exception:
+    easyocr = None
+    cv2 = None
+    OCR_AVAILABLE = False
+    print("⚠️ OCR disabled (EasyOCR/OpenCV not available)")
 
 # Define Groq API URL
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -118,7 +125,12 @@ def allowed_file(filename):
 # --- OPTIMIZED OCR Implementation ---
 class OCREngine:
     _instance = None
-    
+
+    @classmethod
+    def get_instance(cls):
+
+        if not OCR_AVAILABLE:
+            return None
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
@@ -136,60 +148,44 @@ class OCREngine:
 
 @lru_cache(maxsize=32)
 def extract_text_from_image(image_path, min_confidence=0.2):
-    try:
-        start_time = time.time()
-        
-        img = cv2.imread(image_path)
-        if img is None:
-            raise ValueError(f"Failed to load image: {image_path}")
-        
-        h, w = img.shape[:2]
-        max_dim = 1800
-        if max(h, w) > max_dim:
-            scale = max_dim / max(h, w)
-            img = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-        
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        gray = clahe.apply(gray)
-        gray = cv2.adaptiveThreshold(
-            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
-        )
-        gray = cv2.fastNlMeansDenoising(gray, h=10)
-        
-        ocr = OCREngine.get_instance()
-        result = ocr.readtext(gray, detail=1, paragraph=True, min_size=10)
-        
-        text_blocks = []
-        for detection in result:
-            if len(detection) == 3:
-                bbox, text, confidence = detection
-                if confidence > min_confidence:
-                    text_blocks.append(text)
-            elif len(detection) == 2:
-                bbox, text = detection
-                text_blocks.append(text)
-                print(f"⚠️ No confidence score for text: {text[:50]}...")
-            else:
-                print(f"⚠️ Unexpected detection format: {detection}")
-                continue
-        
-        text = ' '.join(text_blocks)
-        text = re.sub(r'\s+', ' ', text).strip()
-        
-        processing_time = time.time() - start_time
-        if text:
-            print(f"✅ Extracted {len(text)} characters in {processing_time:.2f} seconds")
-            print(f"   First 50 chars: {text[:50]}{'...' if len(text) > 50 else ''}")
-        else:
-            print(f"⚠️ No text detected in image after {processing_time:.2f} seconds")
-            
-        return text
-    
-    except Exception as e:
-        print(f"❌ Error processing image {image_path}: {str(e)}")
+
+    if not OCR_AVAILABLE:
+        print("⚠️ OCR not available on Railway")
         return ""
 
+    try:
+        img = cv2.imread(image_path)
+
+        if img is None:
+            return ""
+
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        ocr = OCREngine.get_instance()
+
+        if ocr is None:
+            return ""
+
+        result = ocr.readtext(
+            gray,
+            detail=1,
+            paragraph=True
+        )
+
+        text_blocks = []
+
+        for detection in result:
+            if len(detection) == 3:
+                _, text, confidence = detection
+
+                if confidence > min_confidence:
+                    text_blocks.append(text)
+
+        return " ".join(text_blocks).strip()
+
+    except Exception as e:
+        print(f"OCR Error: {e}")
+        return ""
 # --- URL Processing ---
 def fetch_url_content(url):
     try:
