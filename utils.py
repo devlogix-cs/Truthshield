@@ -131,6 +131,12 @@ class OCREngine:
 
         if not OCR_AVAILABLE:
             return None
+
+        if cls._instance is None:
+            print("OCR disabled on deployment server")
+            return None
+
+        return cls._instance
     @classmethod
     def get_instance(cls):
         if cls._instance is None:

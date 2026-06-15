@@ -3,8 +3,6 @@ flask-cors
 gunicorn
 mysql-connector-python
 beautifulsoup4
-easyocr
-opencv-python
 numpy
 pandas
 scikit-learn
